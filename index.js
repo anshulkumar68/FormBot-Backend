@@ -7,6 +7,7 @@ const cors = require('cors')
 const dotenv = require('dotenv')
 const { error } = require('console')
 const userRoute = require('./routes/formUser')
+const folderRoute = require('./routes/folder');
 const PORT = process.env.PORT || 3000
 
 dotenv.config();
@@ -15,6 +16,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use('/api/user', userRoute);
+app.use('/api/folder', folderRoute);
 
 app.listen(PORT, ()=>{
     console.log(`Server is running on port ${PORT}`)

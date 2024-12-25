@@ -6,8 +6,8 @@ const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 dotenv.config();
 
-// sign up 
-router.post("/register", async (req, res) => {
+// SIGN UP
+router.post("/signup", async (req, res) => {
   const { username, email, password } = req.body;
   const isUserExist = await User.findOne({ email });
   if (isUserExist) {
@@ -29,26 +29,37 @@ router.post("/register", async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "User already existed" });
+    // res.status(500).json({ message: "Error creating user" });
   }
 });
 
-// login
-router.post('/login', async(req, res)=>{
-    const{email, password} = req.body;
-    const user = await User.findOne({email});
-    if(!user){
-        return res.status(404).json({ message: "user not found" });
-    }
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
-    if(!isPasswordCorrect){
-        return res.status(400).json({ message: "wrong password" });
-    }
-    const payload = {
-      id: user._id,
-    };
-    const token = jwt.sign(payload, process.env.JWT_SECRET);
-    res.status(200).json({ token });
-})
+// LOGIN
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  // Find the user by email
+  const user = await User.findOne({ email });
+  console.log("user in db found:", user);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // Check if the password is correct
+  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+  if (!isPasswordCorrect) {
+    return res.status(400).json({ message: "Wrong password" });
+  }
+
+  // Generate the JWT token
+  const payload = { id: user._id };
+  const token = jwt.sign(payload, process.env.JWT_SECRET);
+
+  // Respond with token and username
+  res.status(200).json({ 
+    token, 
+    "username": user.username // Include the username
+  });
+});
 
 module.exports = router;
 
