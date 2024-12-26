@@ -11,7 +11,7 @@ router.get("/", authMiddleware, async (req, res) => {
     const folders = await Folder.find();
     return res.status(200).json({ folders });
   } catch (error) {
-    console.error("Error fetching users:", error);
+    console.error("error fetching users:", error);
     return res.status(500).json({ message: "failed to fetch users" });
   }
 });
@@ -40,7 +40,7 @@ router.post("/", authMiddleware, async (req, res) => {
   // if folder exist
   const isFolderExist = await Folder.findOne({ foldername });
   if (isFolderExist) {
-    return res.status(400).json({ message: "Folder already exist" });
+    return res.status(400).json({ message: "folder already exist" });
   }
 
   try {
@@ -48,9 +48,9 @@ router.post("/", authMiddleware, async (req, res) => {
       foldername,
       userId,
     });
-    return res.status(200).json({ message: "Folder created", folder });
+    return res.status(200).json({ message: "folder created", folder });
   } catch (error) {
-    return res.status(500).json({ message: "Error creating folder", error });
+    return res.status(500).json({ message: "error creating folder", error });
   }
 });
 
@@ -60,17 +60,22 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   const folder = await Folder.findById(id);
   const userId = req.user.id;
 
-  if (!folder) {
-    return res.status(404).json({ message: "Folder not found" });
+  try{
+    if (!folder) {
+      return res.status(404).json({ message: "folder not found" });
+    }
+    if (userId !== folder.userId.toString()) {
+      return res
+        .status(403)
+        .json({ message: "not authorized to delete this folder" });
+    }
+  
+    await Folder.deleteOne({ _id: id });
+    res.status(200).json({ message: "Folder Deleted" });
   }
-  if (userId !== folder.userId.toString()) {
-    return res
-      .status(403)
-      .json({ message: "You are not authorized to delete this folder" });
+  catch(error){
+    return res.status(500).json({ message: "error deleting folder", error });
   }
-
-  await Folder.deleteOne({ _id: id });
-  res.status(200).json({ message: "Folder Deleted" });
 });
 
 module.exports = router;
