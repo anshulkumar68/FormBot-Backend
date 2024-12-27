@@ -81,14 +81,15 @@ router.post("/update", authMiddleware, async (req, res) => {
       //  res.status(200).json({message : "email updated successfully"})
     }
     if (oldPassword || newPassword) {
-      if (!oldPassword || !newPassword) {
-        return res.status(400).json({ message: "password doesn't match" });
-      }
-
       const isMatch = await bcrypt.compare(oldPassword, user.password);
       if (!isMatch) {
-        return res.status(400).json({ message: "incorrect old password" });
+        return res.status(404).json({ message: "incorrect old password" });
       }
+
+      if (oldPassword === newPassword) {
+        return res.status(401).json({ message: "password can't be same" });
+      }
+
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(newPassword, salt);
       user.password = hashedPassword;
