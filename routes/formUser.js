@@ -4,6 +4,7 @@ const User = require("../schema/userSchema");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
+const authMiddleware = require("../middleware/auth");
 dotenv.config();
 
 // SIGN UP
@@ -25,29 +26,29 @@ router.post("/signup", async (req, res) => {
       email,
       password: hashedPassword,
     });
-    res.status(200).json({ message: "User created" });
+    res.status(200).json({ message: "user created" });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "User already existed" });
+    res.status(500).json({ message: "user already existed" });
     // res.status(500).json({ message: "Error creating user" });
   }
 });
 
 // LOGIN
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   // Find the user by email
   const user = await User.findOne({ email });
   console.log("user in db found:", user);
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    return res.status(404).json({ message: "user not found" });
   }
 
   // Check if the password is correct
   const isPasswordCorrect = await bcrypt.compare(password, user.password);
   if (!isPasswordCorrect) {
-    return res.status(400).json({ message: "Wrong password" });
+    return res.status(400).json({ message: "wrong password" });
   }
 
   // Generate the JWT token
@@ -55,13 +56,50 @@ router.post('/login', async (req, res) => {
   const token = jwt.sign(payload, process.env.JWT_SECRET);
 
   // Respond with token and username
-  res.status(200).json({ 
-    token, 
-    "username": user.username // Include the username
+  res.status(200).json({
+    token,
+    username: user.username, // Include the username
   });
 });
 
+// CREDENTIALS UPDATE
+router.post("/update", authMiddleware, async (req, res) => {
+  const userId = req.user.id;
+  const { username, email, oldPassword, newPassword } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "user not found" });
+    }
+    if (username) {
+      user.username = username;
+      //  res.status(200).json({message : "username updated successfully"})
+    }
+    if (email) {
+      user.email = email;
+      //  res.status(200).json({message : "email updated successfully"})
+    }
+    if (oldPassword || newPassword) {
+      if (!oldPassword || !newPassword) {
+        return res.status(400).json({ message: "password doesn't match" });
+      }
+
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "incorrect old password" });
+      }
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      user.password = hashedPassword;
+    }
+    await user.save();
+    res.status(200).json({message : "user updated successfully"});
+
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: "error updating field", error });
+  }
+});
+
 module.exports = router;
-
-
-

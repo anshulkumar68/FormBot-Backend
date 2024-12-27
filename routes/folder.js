@@ -7,12 +7,13 @@ dotenv.config();
 
 // FOLDER GET
 router.get("/", authMiddleware, async (req, res) => {
+  const userId = req.user.id;
   try {
-    const folders = await Folder.find();
+    const folders = await Folder.find({userId:userId});
     return res.status(200).json({ folders });
   } catch (error) {
     console.error("error fetching users:", error);
-    return res.status(500).json({ message: "failed to fetch users" });
+    return res.status(500).json({ message: "failed to fetch users", error : {error} });
   }
 });
 
@@ -77,5 +78,6 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     return res.status(500).json({ message: "error deleting folder", error });
   }
 });
+
 
 module.exports = router;
