@@ -8,7 +8,7 @@ const dotenv = require('dotenv')
 const { error } = require('console')
 const userRoute = require('./routes/formUser')
 const folderRoute = require('./routes/folder');
-const formRoute = require('./routes/typebot')
+const formRoute = require('./routes/forms')
 const PORT = process.env.PORT || 3000
 
 dotenv.config();
