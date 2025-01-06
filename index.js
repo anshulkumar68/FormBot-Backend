@@ -21,10 +21,10 @@ app.use('/api/folder', folderRoute);
 app.use('/api/form', formRoute);
 
 app.listen(PORT, ()=>{
-    console.log(`Server is running on port ${PORT}`)
+    // console.log(`Server is running on port ${PORT}`)
     mongoose.connect(process.env.MONGODB_URI).then(()=>{
-        console.log('MongoDB connected')
+        console.log('Connected to MongoDB')
     }).catch((error)=>{
-        console.log(error)
+        console.log(`Error connecting to MongoDB ${error}`);
     });
 })
