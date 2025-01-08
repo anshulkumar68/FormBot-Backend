@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../schema/userSchema");
-const bcrypt = require("bcrypt");
+// const bcryptjs = require("bcryptjs");
+const bcryptjs = require("bcryptjs")
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const authMiddleware = require("../middleware/auth");
@@ -16,8 +17,8 @@ router.post("/signup", async (req, res) => {
   }
 
   //encrypt password
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
+  const salt = await bcryptjs.genSalt(10);
+  const hashedPassword = await bcryptjs.hash(password, salt);
 
   //creating user
   try {
@@ -46,7 +47,7 @@ router.post("/login", async (req, res) => {
   }
 
   // Check if the password is correct
-  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+  const isPasswordCorrect = await bcryptjs.compare(password, user.password);
   if (!isPasswordCorrect) {
     return res.status(400).json({ message: "wrong password" });
   }
@@ -81,7 +82,7 @@ router.post("/update", authMiddleware, async (req, res) => {
       //  res.status(200).json({message : "email updated successfully"})
     }
     if (oldPassword || newPassword) {
-      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      const isMatch = await bcryptjs.compare(oldPassword, user.password);
       if (!isMatch) {
         return res.status(404).json({ message: "incorrect old password" });
       }
@@ -90,8 +91,8 @@ router.post("/update", authMiddleware, async (req, res) => {
         return res.status(401).json({ message: "password can't be same" });
       }
 
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      const salt = await bcryptjs.genSalt(10);
+      const hashedPassword = await bcryptjs.hash(newPassword, salt);
       user.password = hashedPassword;
     }
     await user.save();
